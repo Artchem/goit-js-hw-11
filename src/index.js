@@ -1,38 +1,54 @@
-// import * as API from './js/cat-api';
+import * as API from './js/pixabay-api';
 // import SlimSelect from 'slim-select';
-// import Notiflix from 'notiflix';
+import Notiflix from 'notiflix';
 
-// const refs = {
-//   breedSelect: document.querySelector('.breed-select'),
-//   catInfo: document.querySelector('.cat-info'),
-//   loader: document.querySelector('.loader'),
-//   error: document.querySelector('.error'),
-// };
+const refs = {
+  searchForm: document.querySelector('.search-form'),
+  gallery: document.querySelector('.gallery'),
+  loadMore: document.querySelector('.load-more'),
+  //   error: document.querySelector('.error'),
+};
 
-// API.fetchBreeds()
-//   .then(data => {
-//     console.log(data);
+refs.searchForm.addEventListener('submit', onSearchSubmit);
+refs.loadMore.addEventListener('click', onLoadMoreClick);
+refs.loadMore.disabled = true;
 
-//     refs.breedSelect.innerHTML = pushDataInSelect(data);
+function onLoadMoreClick() {}
 
-//     refs.breedSelect.classList.remove('is-hidden');
-//     refs.loader.classList.add('is-hidden');
+function onSearchSubmit(evt) {
+  evt.preventDefault();
+  const searchQuery = evt.currentTarget.elements.searchQuery.value;
+  console.log(searchQuery);
 
-//     new SlimSelect({
-//       select: refs.breedSelect,
-//     });
-//   })
-//   .catch(error => {
-//     console.log(error.message);
-//     Notiflix.Notify.failure(`Oops! ${error.message}! Try reloading the page!`, {
-//       width: '380px',
-//       position: 'center-center',
-//       timeout: 6000,
-//       clickToClose: true,
-//     });
+  API.fetchPixabay(searchQuery)
+    .then(data => {
+      console.log(data);
+      refs.gallery.innerHTML = createMarkup(data.hits);
 
-//     refs.loader.classList.add('is-hidden');
-//   });
+      if (data.hits.length === 0) {
+        Notiflix.Notify.failure(
+          `Sorry, there are no images matching your search query. Please try again.`
+        );
+      }
+      refs.loadMore.disabled = false;
+      // refs.breedSelect.classList.remove('is-hidden');
+      // refs.loader.classList.add('is-hidden');
+      // new SlimSelect({
+      //   select: refs.breedSelect,
+      // });
+    })
+    .catch(error => {
+      console.log(error.message);
+      // Notiflix.Notify.failure(`Oops! ${error.message}! Try reloading the page!`, {
+      //   width: '380px',
+      //   position: 'center-center',
+      //   timeout: 6000,
+      //   clickToClose: true,
+      // });
+
+      // refs.loader.classList.add('is-hidden');
+    });
+}
 
 // function pushDataInSelect(array) {
 //   return array
@@ -81,19 +97,35 @@
 //     });
 // }
 
-// function createMarkup(arr) {
-//   return arr
-//     .map(
-//       ({ breeds: [{ name, description, temperament }], url }) =>
-//         `<li class="card-info">
-//         <img src="${url}" alt="" width="350">
-//         <div class="info">
-//           <h2>${name}</h2>
-//           <p>${description}</p>
-//           <p><span class="temperament">Temperament:</span> ${temperament}</p>
-//         </div>
+// webformatURL -  посилання на маленьке зображення для списку карток.
+// largeImageURL - посилання на велике зображення.
+// tags -          рядок з описом зображення. Підійде для атрибуту alt.
+// likes -        кількість лайків.
+// views -       кількість переглядів.
+// comments -   кількість коментарів.
+// downloads -    кількість завантажень.
 
-//       </li>`
-//     )
-//     .join('');
-// }
+function createMarkup(arr) {
+  return arr
+    .map(
+      ({ webformatURL, tags, likes, views, comments, downloads }) =>
+        `<div class="photo-card">
+            <img src="${webformatURL}" alt="${tags}" loading="lazy" width="300" />
+             <div class="info">
+                <p class="info-item">
+                  <b>Likes</b>${likes}
+                </p>
+                <p class="info-item">
+                   <b>Views</b>${views}
+                </p>
+                <p class="info-item">
+                  <b>Comments</b>${comments}
+                </p>
+                <p class="info-item">
+                  <b>Downloads</b>${downloads}
+                </p>
+              </div>
+          </div>`
+    )
+    .join('');
+}
