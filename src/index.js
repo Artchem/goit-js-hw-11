@@ -60,7 +60,7 @@ async function onLoadMoreClick(evt) {
 
     console.log(pageCurrent * nextPage.hits.length);
     if (pageCurrent * nextPage.hits.length >= nextPage.totalHits) {
-      refs.loadMore.hidden = true;
+      refs.loadMore.classList.remove('is-hidden');
     }
 
     if (nextPage.hits.length === 0) {
