@@ -7,58 +7,73 @@ const refs = {
   searchForm: document.querySelector('.search-form'),
   gallery: document.querySelector('.gallery'),
   loadMore: document.querySelector('.load-more'),
+  targetDiv: document.querySelector('.js-guard'),
 };
+
 let pageCurrent = 1;
 let searchQuery = '';
 let gallery = new SimpleLightbox('.gallery-link');
 
+// const targetDiv = document.querySelector('.js-guard');
+// const options = {
+//   root: null,
+//   rootMargin: '500px',
+//   threshold: 1.0,
+// };
+
+// const observer = new IntersectionObserver(onLoadMore, options);
+// function onLoadMore(entries, observer) {
+//   entries.forEach(entry => {
+//     if (entry.isIntersecting) {
+//       console.log(entry);
+
+//       onLoadMoreClick();
+//     }
+
+//     // console.log(entry);
+//   });
+// }
+
 refs.searchForm.addEventListener('submit', onSearchSubmit);
 refs.loadMore.addEventListener('click', onLoadMoreClick);
 
-function onLoadMoreClick(evt) {
+async function onLoadMoreClick(evt) {
   console.dir(refs.searchForm.elements.searchQuery.value);
   pageCurrent += 1;
 
   refs.loadMore.disabled = true;
   refs.loadMore.textContent = 'Loading...';
 
-  API.fetchPixabay(searchQuery, pageCurrent)
-    .then(data => {
-      console.log(data);
+  try {
+    const nextPage = await API.fetchPixabay(searchQuery, pageCurrent);
 
-      refs.gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+    console.log(nextPage);
 
-      gallery.refresh();
+    refs.gallery.insertAdjacentHTML('beforeend', createMarkup(nextPage.hits));
 
-      const { height: cardHeight } = document
-        .querySelector('.gallery')
-        .firstElementChild.getBoundingClientRect();
+    gallery.refresh();
 
-      window.scrollBy({
-        top: cardHeight,
-        behavior: 'smooth',
-      });
+    scrollBehavior();
 
-      refs.loadMore.disabled = false;
-      refs.loadMore.textContent = 'Load more';
+    refs.loadMore.disabled = false;
+    refs.loadMore.textContent = 'Load more';
 
-      console.log(pageCurrent * data.hits.length);
-      if (pageCurrent * data.hits.length >= data.totalHits) {
-        refs.loadMore.hidden = true;
-      }
+    console.log(pageCurrent * nextPage.hits.length);
+    if (pageCurrent * nextPage.hits.length >= nextPage.totalHits) {
+      refs.loadMore.hidden = true;
+    }
 
-      if (data.hits.length === 0) {
-        Notiflix.Notify.failure(
-          `Sorry, there are no images matching your search query. Please try again.`
-        );
-      }
-    })
-    .catch(error => {
-      console.log(error.message);
-    });
+    if (nextPage.hits.length === 0) {
+      Notiflix.Notify.failure(
+        `Sorry, there are no images matching your search query. Please try again.`
+      );
+    }
+  } catch (error) {
+    console.log(error.message);
+  }
 }
 
-function onSearchSubmit(evt) {
+async function onSearchSubmit(evt) {
   evt.preventDefault();
   searchQuery = evt.currentTarget.elements.searchQuery.value;
   console.log(searchQuery);
@@ -66,52 +81,82 @@ function onSearchSubmit(evt) {
   refs.gallery.innerHTML = '';
   pageCurrent = 1;
 
-  API.fetchPixabay(searchQuery, pageCurrent)
-    .then(data => {
-      console.log(data.hits);
+  try {
+    const firstPage = await API.fetchPixabay(searchQuery, pageCurrent);
 
-      refs.gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+    console.log(evt.target);
 
-      gallery = new SimpleLightbox('.gallery-link');
+    refs.gallery.insertAdjacentHTML('beforeend', createMarkup(firstPage.hits));
 
-      const { height: cardHeight } = document
-        .querySelector('.gallery')
-        .firstElementChild.getBoundingClientRect();
+    evt.target.reset();
+    // observer.observe(refs.targetDiv);
 
-      window.scrollBy({
-        behavior: 'smooth',
-      });
+    gallery = new SimpleLightbox('.gallery-link');
 
-      Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+    scrollBehavior();
 
-      if (data.hits.length !== data.totalHits) {
-        refs.loadMore.hidden = false;
-      }
+    Notiflix.Notify.success(`Hooray! We found ${firstPage.totalHits} images.`);
 
-      if (data.hits.length === 0) {
-        Notiflix.Notify.failure(
-          `Sorry, there are no images matching your search query. Please try again.`
-        );
-      }
-      // refs.loadMore.disabled = false;
-      // refs.breedSelect.classList.remove('is-hidden');
-      // refs.loader.classList.add('is-hidden');
-      // new SlimSelect({
-      //   select: refs.breedSelect,
-      // });
-    })
-    .catch(error => {
-      console.log(error.message);
-      // Notiflix.Notify.failure(`Oops! ${error.message}! Try reloading the page!`, {
-      //   width: '380px',
-      //   position: 'center-center',
-      //   timeout: 6000,
-      //   clickToClose: true,
-      // });
+    if (firstPage.hits.length !== firstPage.totalHits) {
+      refs.loadMore.classList.remove('is-hidden');
+    }
 
-      // refs.loader.classList.add('is-hidden');
-    })
-    .finally(evt.currentTarget.reset());
+    if (firstPage.hits.length === 0) {
+      Notiflix.Notify.failure(
+        `Sorry, there are no images matching your search query. Please try again.`
+      );
+    }
+  } catch (error) {
+    console.log(error.message);
+    Notiflix.Notify.failure(`Oops! ${error.message}! Try reloading the page!`, {
+      width: '380px',
+      position: 'center-center',
+      timeout: 6000,
+      clickToClose: true,
+    });
+    evt.target.reset();
+  }
+}
+
+//   API.fetchPixabay(searchQuery, pageCurrent)
+//     .then(data => {
+//       console.log(data.hits);
+
+//       refs.gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+
+//       // observer.observe(refs.targetDiv);
+
+//       gallery = new SimpleLightbox('.gallery-link');
+
+//       scrollBehavior();
+
+//       Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+
+//       if (data.hits.length !== data.totalHits) {
+//         refs.loadMore.classList.remove('is-hidden');
+//       }
+
+//       if (data.hits.length === 0) {
+//         Notiflix.Notify.failure(
+//           `Sorry, there are no images matching your search query. Please try again.`
+//         );
+//       }
+//     })
+//     .catch(error => {
+//       console.log(error.message);
+//     })
+//     .finally(evt.currentTarget.reset());
+// }
+
+function scrollBehavior() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight,
+    behavior: 'smooth',
+  });
 }
 
 function createMarkup(arr) {
