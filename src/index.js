@@ -118,36 +118,6 @@ async function onSearchSubmit(evt) {
   }
 }
 
-//   API.fetchPixabay(searchQuery, pageCurrent)
-//     .then(data => {
-//       console.log(data.hits);
-
-//       refs.gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-
-//       // observer.observe(refs.targetDiv);
-
-//       gallery = new SimpleLightbox('.gallery-link');
-
-//       scrollBehavior();
-
-//       Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-
-//       if (data.hits.length !== data.totalHits) {
-//         refs.loadMore.classList.remove('is-hidden');
-//       }
-
-//       if (data.hits.length === 0) {
-//         Notiflix.Notify.failure(
-//           `Sorry, there are no images matching your search query. Please try again.`
-//         );
-//       }
-//     })
-//     .catch(error => {
-//       console.log(error.message);
-//     })
-//     .finally(evt.currentTarget.reset());
-// }
-
 function scrollBehavior() {
   const { height: cardHeight } = document
     .querySelector('.gallery')
