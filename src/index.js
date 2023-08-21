@@ -108,6 +108,7 @@ async function onSearchSubmit(evt) {
     }
   } catch (error) {
     console.log(error.message);
+    refs.loadMore.classList.add('is-hidden');
     Notiflix.Notify.failure(`Oops! ${error.message}! Try reloading the page!`, {
       width: '380px',
       position: 'center-center',
