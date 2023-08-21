@@ -78,15 +78,13 @@ async function onLoadMoreClick(evt) {
 async function onSearchSubmit(evt) {
   evt.preventDefault();
   searchQuery = evt.currentTarget.elements.searchQuery.value;
-  console.log(searchQuery);
+  // console.log(searchQuery);
 
   refs.gallery.innerHTML = '';
   pageCurrent = 1;
 
   try {
     const firstPage = await API.fetchPixabay(searchQuery, pageCurrent);
-
-    console.log(evt.target);
 
     refs.gallery.insertAdjacentHTML('beforeend', createMarkup(firstPage.hits));
 
