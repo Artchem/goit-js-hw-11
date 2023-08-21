@@ -38,7 +38,8 @@ refs.searchForm.addEventListener('submit', onSearchSubmit);
 refs.loadMore.addEventListener('click', onLoadMoreClick);
 
 async function onLoadMoreClick(evt) {
-  console.dir(refs.searchForm.elements.searchQuery.value);
+  let count = refs.gallery.childElementCount;
+
   pageCurrent += 1;
 
   refs.loadMore.disabled = true;
@@ -47,7 +48,7 @@ async function onLoadMoreClick(evt) {
   try {
     const nextPage = await API.fetchPixabay(searchQuery, pageCurrent);
 
-    console.log(nextPage);
+    // console.log(nextPage);
 
     refs.gallery.insertAdjacentHTML('beforeend', createMarkup(nextPage.hits));
 
@@ -58,9 +59,10 @@ async function onLoadMoreClick(evt) {
     refs.loadMore.disabled = false;
     refs.loadMore.textContent = 'Load more';
 
-    console.log(pageCurrent * nextPage.hits.length);
-    if (pageCurrent * nextPage.hits.length >= nextPage.totalHits) {
-      refs.loadMore.classList.remove('is-hidden');
+    count += nextPage.hits.length;
+
+    if (count >= nextPage.totalHits) {
+      refs.loadMore.classList.add('is-hidden');
     }
 
     if (nextPage.hits.length === 0) {
